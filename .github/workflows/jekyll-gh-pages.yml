@@ -26,18 +26,33 @@ jobs:
   # Build job
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [ 20.13.0 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - name: Install dependencies
+        # Using npm ci is generally faster than running npm i because it caches dependencies
+        run: |
+          npm ci
+      - name: Build the app
+        run: |
+          npm run build
+      - name: Run component tests
+        run: |
+          npm run test
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Build with Jekyll
-        uses: actions/jekyll-build-pages@v1
-        with:
-          source: ./
-          destination: ./_site
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'build/'
 
   # Deployment job
   deploy:
